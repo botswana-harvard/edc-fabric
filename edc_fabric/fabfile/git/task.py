@@ -1,4 +1,5 @@
 import os
+import sys
 
 from fabric.api import local, lcd, env, warn, task, abort
 from fabric.colors import blue
@@ -10,8 +11,8 @@ from ..repositories import get_repo_name
 def generate_requirements(source_root=None, project_repo_name=None,
                           requirements_file=None, new_filename=None):
     """For example:
-        fab -H localhost git.generate_requirements:source_root=/Users/erikvw/source,
-            project_repo_name=ambition,requirements_file=requirements.txt,
+        fab -H localhost git.generate_requirements:source_root=/Users/erikvw/source,\
+            project_repo_name=ambition,requirements_file=requirements.txt,\
             new_filename=requirements_production.txt
     """
     source_root = source_root or env.source_root
@@ -33,13 +34,22 @@ def generate_requirements(source_root=None, project_repo_name=None,
 
 
 @task
-def cut_releases(source_root=None, project_repo_name=None, requirements_file=None, dry_run=None):
+def cut_releases(source_root=None, project_repo_name=None, requirements_file=None,
+                 organizations=None, dry_run=None):
     """
-    Cuts releases on the local machine.
+    Cuts releases on the local machine for modules listed in
+    requirements.
+
+    For example:
+        fab -H localhost git.cut_releases:source_root=/Users/erikvw/source,\
+            project_repo_name=ambition,requirements_file=requirements.txt,\
+            dry_run=True
     """
     source_root = source_root or env.source_root
     project_repo_name = project_repo_name or env.project_repo_name
     requirements_file = requirements_file or env.requirements_file
+    organizations = organizations or [
+        'botswana-harvard', 'erikvw', 'clinicedc', 'django-lis']
     # release project repo.
     new_release(source_root=source_root,
                 repo_name=project_repo_name, dry_run=dry_run)
@@ -47,10 +57,12 @@ def cut_releases(source_root=None, project_repo_name=None, requirements_file=Non
     with open(os.path.join(source_root, project_repo_name, requirements_file), 'r') as f:
         lines = f.read()
         for line in lines.split('\n'):
-            if 'botswana-harvard' in line or 'erikvw' in line or project_repo_name in line:
+            if any(org in line for org in organizations):
+                # project_repo_name in line:
                 repo_url = line.split('@')[0].replace('git+', '')
                 repo_name = get_repo_name(repo_url)
                 if repo_name:
+                    sys.stdout.write(f'\n{line}')
                     new_release(source_root=source_root,
                                 repo_name=repo_name, dry_run=dry_run)
 
@@ -105,7 +117,6 @@ def new_release(source_root=None, repo_name=None, dry_run=None, git_flow_init=No
                           current_tag=current_tag,
                           next_tag=next_tag))
             else:
-
                 version_string_before = 'version=\'{current_tag}\''.format(
                     current_tag=current_tag)
                 version_string_after = 'version=\'{next_tag}\''.format(
