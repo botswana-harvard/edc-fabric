@@ -10,18 +10,18 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='bcpp-fabric',
+    name='edc-fabric',
     version='0.1.4',
     author=u'Erik van Widenfelt',
     author_email='ew2789@gmail.com',
     packages=find_packages(),
     include_package_data=True,
-    url='https://github.com/botswana-harvard/bcpp-fabric',
+    url='https://github.com/botswana-harvard/edc-fabric',
     license='GPL license, see LICENSE',
-    description='bcpp fabric deploy',
+    description='edc fabric deploy',
     long_description=README,
     zip_safe=False,
-    keywords='django bcpp fabric',
+    keywords='django edc fabric',
     install_requires=['Fabric3'],
     classifiers=[
         'Environment :: Web Environment',
@@ -29,7 +29,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
