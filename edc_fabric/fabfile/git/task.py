@@ -19,16 +19,18 @@ def generate_requirements(source_root=None, project_repo_name=None,
     project_repo_name = project_repo_name or env.project_repo_name
     requirements_file = requirements_file or env.requirements_file
     new_requirements_file = new_filename or f'{requirements_file.split(".")[0]}.new'
+    organizations = ['botswana-harvard', 'cancer',
+                     'cancer-study', 'tshilo-dikotla']
     with open(os.path.join(source_root, project_repo_name, requirements_file), 'r') as f, open(
             os.path.join(source_root, project_repo_name, new_requirements_file), 'w') as new_file:
         lines = f.read()
         for line in lines.split('\n'):
-            if 'botswana-harvard' in line or 'erikvw' in line or project_repo_name in line:
+            if any(org in line for org in organizations):
                 repo_url = line.split('@')[0].replace('git+', '')
                 repo_name = get_repo_name(repo_url)
                 with lcd(os.path.join(source_root, repo_name)):
                     current_tag = local(
-                        'git describe --abbrev=0 --tags', capture=True)
+                        'git describe --tags `git rev-list --tags --max-count=1`', capture=True)
                 pre_stub = line.split('@')[0]
                 new_file.write(f'{pre_stub}@{current_tag}#egg={repo_name}\n')
 
@@ -49,7 +51,7 @@ def cut_releases(source_root=None, project_repo_name=None, requirements_file=Non
     project_repo_name = project_repo_name or env.project_repo_name
     requirements_file = requirements_file or env.requirements_file
     organizations = organizations or [
-        'botswana-harvard', 'erikvw', 'clinicedc', 'django-lis']
+        'botswana-harvard', 'cancer', 'cancer-study', 'tshilo-dikotla']
     # release project repo.
     new_release(source_root=source_root,
                 repo_name=project_repo_name, dry_run=dry_run)
@@ -100,7 +102,8 @@ def new_release(source_root=None, repo_name=None, dry_run=None, git_flow_init=No
         local('git checkout develop')
         local('git pull')
         if not current_tag:
-            current_tag = local('git describe --abbrev=0 --tags', capture=True)
+            current_tag = local(
+                'git describe --tags `git rev-list --tags --max-count=1`', capture=True)
             if 'fatal' in current_tag or not current_tag:
                 current_tag = '0.1.0'
         next_tag = get_next_tag(current_tag)
@@ -140,7 +143,8 @@ def new_release(source_root=None, repo_name=None, dry_run=None, git_flow_init=No
                 local('echo "{data}" > setup.py'.format(data=data))
                 local('git add setup.py')
                 local('git commit -m \'bump version\'')
-                local("git flow release finish {}".format(next_tag))
+                local(
+                    "git flow release finish -m \'{next_tag}\' {next_tag}".format(next_tag=next_tag))
                 local('git push')
                 local('git push --tags')
                 local('git checkout master')
