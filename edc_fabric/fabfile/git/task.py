@@ -43,7 +43,8 @@ def clone_repos(source_root=None, project_repo_name=None, requirements_file=None
     requirements.
 
     For example:
-        fab -H localhost clone_repos:source_root=/Users/imosweu/source,project_repo_name=potlako,requirements_file=requirements.txt
+        fab -H localhost clone_repos:source_root=/Users/imosweu/source,project_repo_name=potlako,\
+        requirements_file=requirements.txt
     """
     source_root = source_root or env.source_root
     project_repo_name = project_repo_name or env.project_repo_name
