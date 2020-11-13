@@ -36,6 +36,38 @@ def generate_requirements(source_root=None, project_repo_name=None,
 
 
 @task
+def clone_repos(source_root=None, project_repo_name=None, requirements_file=None,
+                 organizations=None):
+    """
+    Clone repos on the local machine for modules listed in
+    requirements.
+
+    For example:
+        fab -H localhost clone_repos:source_root=/Users/imosweu/source,project_repo_name=potlako,\
+        requirements_file=requirements.txt
+    """
+    source_root = source_root or env.source_root
+    project_repo_name = project_repo_name or env.project_repo_name
+    requirements_file = requirements_file or env.requirements_file
+    organizations = organizations or [
+        'botswana-harvard', 'potlako-plus', 'cancer-study', 'tshilo-dikotla',
+        'BHP-Pharmacy', 'Botswana-Harvard-Utility-Systems', 'flourishbhp']
+    
+    # clone requirements
+    with open(os.path.join(source_root, project_repo_name, requirements_file), 'r') as f:
+        lines = f.read()
+        for line in lines.split('\n'):
+            if any(org in line for org in organizations):
+                # project_repo_name in line:
+                repo_url = line.split('@')[0].replace('git+', '')
+                repo_name = get_repo_name(repo_url)
+                with lcd(source_root):
+                    if not os.path.isdir(os.path.join(source_root,repo_name)):
+                        sys.stdout.write(f'\n cloning {repo_name}')
+                        local(f'git clone {repo_url}')
+                        
+
+@task
 def cut_releases(source_root=None, project_repo_name=None, requirements_file=None,
                  organizations=None, dry_run=None):
     """
