@@ -59,7 +59,7 @@ def clone_repos(source_root=None, project_repo_name=None, requirements_file=None
         for line in lines.split('\n'):
             if any(org in line for org in organizations):
                 # project_repo_name in line:
-                repo_url = line.split('@')[0].replace('git+', '')
+                repo_url = line.split('@')[0].replace('git+https://', 'git@')
                 repo_name = get_repo_name(repo_url)
                 with lcd(source_root):
                     if not os.path.isdir(os.path.join(source_root,repo_name)):
