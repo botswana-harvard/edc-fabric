@@ -11,7 +11,7 @@ from ..repositories import get_repo_name
 def generate_requirements(source_root=None, project_repo_name=None,
                           requirements_file=None, new_filename=None):
     """For example:
-        fab -H localhost git.generate_requirements:source_root=/Users/erikvw/source,\
+        fab -H localhost generate_requirements:source_root=/Users/erikvw/source,\
             project_repo_name=ambition,requirements_file=requirements.txt,\
             new_filename=requirements_production.txt
     """
@@ -43,8 +43,7 @@ def clone_repos(source_root=None, project_repo_name=None, requirements_file=None
     requirements.
 
     For example:
-        fab -H localhost clone_repos:source_root=/Users/imosweu/source,project_repo_name=potlako,\
-        requirements_file=requirements.txt
+        fab -H localhost clone_repos:source_root=/Users/imosweu/source,project_repo_name=potlako,requirements_file=requirements.txt
     """
     source_root = source_root or env.source_root
     project_repo_name = project_repo_name or env.project_repo_name
@@ -75,7 +74,7 @@ def cut_releases(source_root=None, project_repo_name=None, requirements_file=Non
     requirements.
 
     For example:
-        fab -H localhost git.cut_releases:source_root=/Users/erikvw/source,\
+        fab -H localhost cut_releases:source_root=/Users/erikvw/source,\
             project_repo_name=ambition,requirements_file=requirements.txt,\
             dry_run=True
     """
@@ -121,7 +120,7 @@ def new_release(source_root=None, repo_name=None, dry_run=None, git_flow_init=No
 
     Example:
 
-        fab -H localhost git.new_release:source_root=/Users/erikvw/source,repo_name=bcpp-subject
+        fab -H localhost new_release:source_root=/Users/erikvw/source,repo_name=bcpp-subject
 
     """
     source_root = source_root or env.remote_source_root
