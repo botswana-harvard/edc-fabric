@@ -11,16 +11,16 @@ from ..repositories import get_repo_name
 def generate_requirements(source_root=None, project_repo_name=None,
                           requirements_file=None, new_filename=None):
     """For example:
-        fab -H localhost generate_requirements:source_root=/Users/erikvw/source,\
-            project_repo_name=ambition,requirements_file=requirements.txt,\
-            new_filename=requirements_production.txt
+        fab -H localhost common.generate_requirements:source_root=/Users/imosweu/source,project_repo_name=flourish,requirements_file=requirements.txt,new_filename=requirements_production.txt
     """
     source_root = source_root or env.source_root
     project_repo_name = project_repo_name or env.project_repo_name
     requirements_file = requirements_file or env.requirements_file
     new_requirements_file = new_filename or f'{requirements_file.split(".")[0]}.new'
-    organizations = ['botswana-harvard', 'cancer',
-                     'cancer-study', 'tshilo-dikotla']
+    organizations = [
+        'botswana-harvard', 'cancer', 'Botswana-Harvard-Utility-Systems',
+                     'cancer-study', 'tshilo-dikotla', 'flourishbhp', 'potlako-plus',
+                     'covid19-vaccine']
     with open(os.path.join(source_root, project_repo_name, requirements_file), 'r') as f, open(
             os.path.join(source_root, project_repo_name, new_requirements_file), 'w') as new_file:
         lines = f.read()
@@ -28,6 +28,7 @@ def generate_requirements(source_root=None, project_repo_name=None,
             if any(org in line for org in organizations):
                 repo_url = line.split('@')[0].replace('git+', '')
                 repo_name = get_repo_name(repo_url)
+                print("??????????????", repo_name)
                 with lcd(os.path.join(source_root, repo_name)):
                     current_tag = local(
                         'git describe --tags `git rev-list --tags --max-count=1`', capture=True)
@@ -43,7 +44,7 @@ def clone_repos(source_root=None, project_repo_name=None, requirements_file=None
     requirements.
 
     For example:
-        fab -H localhost clone_repos:source_root=/Users/imosweu/source,project_repo_name=potlako,\
+        fab -H localhost clone_repos:source_root=/Users/imosweu/source,project_repo_name=flourish,\
         requirements_file=requirements.txt
     """
     source_root = source_root or env.source_root
@@ -51,8 +52,9 @@ def clone_repos(source_root=None, project_repo_name=None, requirements_file=None
     requirements_file = requirements_file or env.requirements_file
     organizations = organizations or [
         'botswana-harvard', 'potlako-plus', 'cancer-study', 'tshilo-dikotla',
-        'BHP-Pharmacy', 'Botswana-Harvard-Utility-Systems', 'flourishbhp']
-    
+        'BHP-Pharmacy', 'Botswana-Harvard-Utility-Systems', 'flourishbhp',
+        '']
+
     # clone requirements
     with open(os.path.join(source_root, project_repo_name, requirements_file), 'r') as f:
         lines = f.read()
@@ -62,10 +64,10 @@ def clone_repos(source_root=None, project_repo_name=None, requirements_file=None
                 repo_url = line.split('@')[0].replace('git+https://github.com/', 'git@github.com:')
                 repo_name = get_repo_name(repo_url)
                 with lcd(source_root):
-                    if not os.path.isdir(os.path.join(source_root,repo_name)):
+                    if not os.path.isdir(os.path.join(source_root, repo_name)):
                         sys.stdout.write(f'\n cloning {repo_name}')
                         local(f'git clone {repo_url}')
-                        
+
 
 @task
 def cut_releases(source_root=None, project_repo_name=None, requirements_file=None,
@@ -75,18 +77,20 @@ def cut_releases(source_root=None, project_repo_name=None, requirements_file=Non
     requirements.
 
     For example:
-        fab -H localhost cut_releases:source_root=/Users/erikvw/source,\
-            project_repo_name=ambition,requirements_file=requirements.txt,\
-            dry_run=True
+        fab -H localhost common.cut_releases:source_root=/Users/imosweu/source,project_repo_name=flourish,requirements_file=requirements.txt,dry_run=True
     """
     source_root = source_root or env.source_root
     project_repo_name = project_repo_name or env.project_repo_name
     requirements_file = requirements_file or env.requirements_file
-    organizations = organizations or [
-        'botswana-harvard', 'cancer', 'cancer-study', 'tshilo-dikotla']
+    organizations = organizations or [  'botswana-harvard',
+                                        # 'potlako-plus',
+                                        # 'covid19-vaccine',
+                                        'flourishbhp',
+                                        # 'BHP-Pharmacy'
+                                        ]
     # release project repo.
-    new_release(source_root=source_root,
-                repo_name=project_repo_name, dry_run=dry_run)
+    # new_release(source_root=source_root,
+                # repo_name=project_repo_name, dry_run=dry_run)
     # release requirements
     with open(os.path.join(source_root, project_repo_name, requirements_file), 'r') as f:
         lines = f.read()
@@ -121,7 +125,7 @@ def new_release(source_root=None, repo_name=None, dry_run=None, git_flow_init=No
 
     Example:
 
-        fab -H localhost new_release:source_root=/Users/erikvw/source,repo_name=bcpp-subject
+        fab -H localhost common.new_release:source_root=/Users/imosweu/source,repo_name=edc-document-archieve-api
 
     """
     source_root = source_root or env.remote_source_root
@@ -134,49 +138,38 @@ def new_release(source_root=None, repo_name=None, dry_run=None, git_flow_init=No
         local('git checkout develop')
         local('git pull')
         if not current_tag:
-            current_tag = local(
-                'git describe --tags `git rev-list --tags --max-count=1`', capture=True)
-            if 'fatal' in current_tag or not current_tag:
+            try:
+                current_tag = local(
+                    'git describe --tags `git rev-list --tags --max-count=1`', capture=True)
+            except:
                 current_tag = '0.1.0'
         next_tag = get_next_tag(current_tag)
         result = local('git diff --name-status master..develop', capture=True)
         if not result and not force_increment:
-            warn(blue('{repo_name}: release {current_tag} is current'.format(
-                repo_name=repo_name,
-                current_tag=current_tag)))
+            warn(blue(f'{repo_name}: release {current_tag} is current'))
         else:
             if dry_run:
-                print('{repo_name}-{current_tag}: git flow release start '
-                      '{next_tag}'.format(
-                          repo_name=repo_name,
-                          current_tag=current_tag,
-                          next_tag=next_tag))
+                print(f'{repo_name}-{current_tag}: git flow release start {next_tag}')
             else:
-                version_string_before = 'version=\'{current_tag}\''.format(
-                    current_tag=current_tag)
-                version_string_after = 'version=\'{next_tag}\''.format(
-                    next_tag=next_tag)
+                version_string_before = f'version=\'{current_tag}\''
+                version_string_after = f'version=\'{next_tag}\''
                 path = os.path.expanduser(
                     os.path.join(source_root, repo_name, 'setup.py'))
                 if not os.path.exists(path):
-                    abort('{repo_name}: setup.py does not exist. Got {path}'.format(
-                        repo_name=repo_name, path=path))
+                    abort(f'{repo_name}: setup.py does not exist. Got {path}')
                 data = local('cat setup.py', capture=True)
                 if version_string_before not in data:
-                    abort('{repo_name}: {version_string_before} not found '
-                          'in setup.py'.format(
-                              repo_name=repo_name,
-                              version_string_before=version_string_before,
-                              current_tag=current_tag))
-                local('git flow release start {}'.format(next_tag))
+                    abort(f'{repo_name}: {version_string_before} not found '
+                          'in setup.py')
+                local(f'git flow release start {next_tag}')
                 data = local('cat setup.py', capture=True)
                 data = data.replace(version_string_before,
                                     version_string_after)
-                local('echo "{data}" > setup.py'.format(data=data))
+                local(f'echo "{data}" > setup.py')
                 local('git add setup.py')
                 local('git commit -m \'bump version\'')
                 local(
-                    "git flow release finish -m \'{next_tag}\' {next_tag}".format(next_tag=next_tag))
+                    f"git flow release finish -m \'{next_tag}\'")
                 local('git push')
                 local('git push --tags')
                 local('git checkout master')

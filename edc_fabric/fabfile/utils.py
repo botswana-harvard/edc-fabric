@@ -106,13 +106,11 @@ def get_hosts(path=None, gpg_filename=None):
     if env.roles:
         for role in env.roles:
             env.hosts.extend(env.roledefs.get(role) or [])
-    conf_string = local('cd {path}&&gpg2 --decrypt {gpg_filename}'.format(
-        path=path, gpg_filename=gpg_filename), capture=True)
+    conf_string = local(f'cd {path}&&gpg --decrypt {gpg_filename}', capture=True)
     conf_string = conf_string.replace(
         'gpg: WARNING: message was not integrity protected', '\n')
     conf_data = conf_string.split('\n')
     csv_reader = csv.reader(conf_data)
-
     if env.hosts:
         for index, row in enumerate(csv_reader):
             if index == 0:
@@ -123,8 +121,8 @@ def get_hosts(path=None, gpg_filename=None):
                         user=env.user or 'django', hostname=row[0])
                     env.passwords.update({host: row[1]})
     else:
-        conf_string = local('cd {path}&&gpg2 --decrypt {gpg_filename}'.format(
-            path=path, gpg_filename=gpg_filename), capture=True)
+
+        conf_string = local(f'cd {path}&&gpg --decrypt {gpg_filename}', capture=True)
         conf_string = conf_string.replace(
             'gpg: WARNING: message was not integrity protected', '\n')
         conf_data = conf_string.split('\n')
@@ -166,7 +164,7 @@ def decrypt_to_config(gpg_filename=None, section=None):
     """Returns a config by decrypting a conf file with a single section.
     """
     section = '[{section}]'.format(section=section)
-    conf_string = run('gpg2 --decrypt {gpg_filename}'.format(
+    conf_string = run('gpg --decrypt {gpg_filename}'.format(
         gpg_filename=gpg_filename))
     conf_string = conf_string.replace(
         'gpg: WARNING: message was not integrity protected', '\n')

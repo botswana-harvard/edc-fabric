@@ -62,10 +62,10 @@ def update_env_secrets(path=None, verbose=None):
     with open(secrets_conf_path, 'r') as f:
         data = f.read()
     config.read_string(data)
-    for key, value in config['secrets'].items():
-        if verbose:
-            print(key)
-        setattr(env, key, value)
+    # for key, value in config['secrets'].items():
+        # if verbose:
+            # print(key)
+        # setattr(env, key, value)
 
 
 def update_fabric_env(use_local_fabric_conf=None, verbose=None):
